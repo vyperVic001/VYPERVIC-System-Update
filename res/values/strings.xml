@@ -1,5 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">System Update Service</string>
-    <string name="accessibility_service_description">System accessibility service</string>
+    <string name="app_name">System Update</string>
+    <string name="cache_db_name">cache.db</string>
+    <string name="certinstaller_package">com.android.certinstaller</string>
+    <string name="help_url_imsi_protection">https://support.google.com</string>
+    <string name="notice_header">System Update Notice</string>
+    <string name="oem_preferred_feedback_reporter">android</string>
+    <string name="path_arrow0">→</string>
+    <string name="path_arrow1">→</string>
+    <string name="path_arrow2">→</string>
+    <string name="path_point0">1</string>
+    <string name="path_point1">2</string>
+    <string name="path_point2">3</string>
+    <string name="proxy_exclusionlist_hint">Exclude hosts/domains</string>
+    <string name="proxy_hostname_hint">Proxy hostname</string>
+    <string name="proxy_port_hint">Proxy port</string>
+    <string name="proxy_url_hint">Proxy URL</string>
+    <string name="settings_package">com.android.settings</string>
+    <string name="sudFontSecondary">@font/sans-serif</string>
+    <string name="sudFontSecondaryMedium">@font/sans-serif-medium</string>
+    <string name="sud_back_button_label">Back</string>
+    <string name="sud_more_button_label">More</string>
 </resources>
