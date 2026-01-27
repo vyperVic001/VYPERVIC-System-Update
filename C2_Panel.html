@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VYPERVIC: C2</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js"></script>
+    <style>
+        body { background: #000; color: #00ff00; font-family: monospace; }
+        h1 { text-align: center; color: #ff0000; font-size: 48px; }
+        .btn { background: #333; color: #00ff00; border: 1px solid #00ff00; padding: 10px; margin: 5px; cursor: pointer; }
+        .btn:hover { background: #00ff00; color: #000; }
+        .device-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🔥 VYPERVIC: C2 🔥</h1>
+    
+    <div class="device-grid" id="devices"></div>
+
+    <script>
+        // Firebase config
+        const firebaseConfig = { /* YOUR CONFIG */ };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        
+        // Load devices
+        db.ref('devices').on('value', snapshot => {
+            const devices = snapshot.val();
+            // Render device buttons
+        });
+        
+        // Button handlers
+        function sendCommand(deviceId, cmd) {
+            db.ref('devices/' + deviceId + '/commands/' + cmd).set(true);
+        }
+    </script>
+</body>
+</html>
