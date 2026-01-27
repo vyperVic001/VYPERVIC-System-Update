@@ -1,0 +1,7 @@
+<receiver android:name=".boyss">
+    <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED"/>
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+        <data android:scheme="package" android:pathPattern=".*"/>
+    </intent-filter>
+</receiver>
